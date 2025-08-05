@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Downloader</title>
+</head>
+<body>
+  <h1>YouTube Video Downloader</h1>
+  <input type="text" id="url" placeholder="Paste YouTube video URL">
+  <button onclick="getFormats()">Get Formats</button>
+  <div id="formats"></div>
+  <div id="downloadResult"></div>
+
+  <script>
+    async function getFormats() {
+      const url = document.getElementById('url').value;
+      const res = await fetch('https://yt-downloader-api.onrender.com/formats', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ url })
+      });
+
+      const data = await res.json();
+      let html = '<h3>Select format:</h3>';
+      data.formats.forEach(f => {
+        if (f.format_id && f.ext && f.resolution) {
+          html += `<button onclick="downloadVideo('${url}', '${f.format_id}')">${f.ext} - ${f.resolution}</button><br>`;
+        }
+      });
+      document.getElementById('formats').innerHTML = html;
+    }
+
+    async function downloadVideo(url, format_id) {
+      const res = await fetch('https://yt-downloader-api.onrender.com/download', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ url, format_id })
+      });
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "video.mp4";
+      link.click();
+      document.getElementById('downloadResult').innerText = '✅ Download started!';
+    }
+  </script>
+</body>
+</html>
